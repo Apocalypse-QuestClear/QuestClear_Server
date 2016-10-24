@@ -3,4 +3,12 @@
  */
 var mysql = require('promise-mysql');
 
-module.exports = mysql.createConnection(require('./config'));
+var conn = mysql.createConnection(require('./config'));
+
+conn.query = function (sql) {
+    return conn.then(function (connection) {
+        return connection.query(sql);
+    });
+};
+
+module.exports = conn;

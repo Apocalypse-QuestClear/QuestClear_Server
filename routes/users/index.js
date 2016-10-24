@@ -4,35 +4,42 @@
 
 var router = require('express').Router();
 
-var encrypt = require(__base + 'encryption');
+var crypto = require(__base + 'cryptogram');
 var conn = require(__base + 'connection');
+var squel = require('squel');
 
 router.post('/', function (req, res, next) {
 
     if (!req.body.username) {
-        return res.status(400).json({ error: 'Username is empty.' });
+        return res.status(400).json({error: 'Username is empty.'});
     }
     else if (!req.body.password) {
-        return res.status(400).json({ error: 'Password is empty.' });
+        return res.status(400).json({error: 'Password is empty.'});
     }
-    conn.then(function(connection) {
-        connection.query("SELECT * FROM users WHERE username = '" + req.body.username +"'")
-            .then(function(rows) {
-                if(rows[0]) {
-                    return res.status(409).json({ error: 'Username already exists.' });
-                }
-                else {
-                    var password = encrypt(req.body.password);
-                    return connection.query("INSERT INTO users SET username = '" + req.body.username + "', password = '" + encrypt(req.body.password) + "', email = '" + (req.body.email||'') + "'");
-                }
-            }).then(function() {
-            return connection.query("SELECT MAX(uid) as uid FROM users");
-        }).then(function(rows) {
-                return res.status(201).json({uid: rows[0].uid});
-        }).catch(function(err){
-            //next(err);  -------------?
+
+    conn.query(squel.select()
+                    .from('users')
+                    .where("username = '" + req.body.username + "'").toString())
+        .then(function (rows) {
+            if (rows[0]) {
+                res.status(409).json({error: 'Username already exists.'});
+                return;
+            }
+            else {
+                var password = crypto.encrypt(req.body.password);
+                return conn.query(squel.insert()
+                                        .into('users')
+                                        .set('username', req.body.username)
+                                        .set('password', password)
+                                        .set('email', (req.body.email || '')).toString());
+               }
+        }).then(function (rows) {
+            if(rows) {
+                return res.status(201).json({uid: rows.insertId});
+            }
+        }).catch(function (err) {
+            next(err);
         });
-    });
 });
 
 module.exports = router;
