@@ -19,7 +19,7 @@ router.post('/', function (req, res, next) {
 
     conn.query(squel.select()
                     .from('users')
-                    .where("username = '" + req.body.username + "'").toString())
+                    .where("username = ?", req.body.username).toString())
         .then(function (rows) {
             if (rows[0]) {
                 res.status(409).json({error: 'Username already exists.'});

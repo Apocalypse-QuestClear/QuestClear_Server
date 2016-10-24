@@ -11,7 +11,7 @@ router.post('/', function (req, res, next) {
     conn.query(squel.select()
                     .field('username')
                     .from('users')
-                    .where("uid = '" + res.locals.user.uid + "'").toString())
+                    .where("uid = ?", res.locals.user.uid).toString())
         .then(function (rows) {
             return res.status(200).json({uid: res.locals.user.uid, username: rows[0].username});
         }).catch(function (err) {
