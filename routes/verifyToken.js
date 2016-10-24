@@ -19,7 +19,7 @@ module.exports = function(req, res, next) {
             res.status(401);
             return res.json({error: 'Failed to authenticate token.'});
         } else {
-            req.user = decoded;
+            res.locals.user = decoded;
             next();
         }
     });

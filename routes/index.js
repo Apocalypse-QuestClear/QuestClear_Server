@@ -4,10 +4,10 @@ var router = require('express').Router();
 
 router.use('/users', require('./users'));
 router.use('/login', require('./login'));
-router.use('/auth', require('./auth'));
 
 router.use(require('./verifyToken'));
 
+router.use('/auth', require('./auth'));
 router.use('/questions', require('./questions'));
 router.use('/answers', require('./answers'));
 
