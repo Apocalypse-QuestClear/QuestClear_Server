@@ -13,7 +13,7 @@ var squel = require('squel');
 router.post('/', function (req, res, next) {
     conn.query(squel.select()
                     .from('users')
-                    .where("username = '" + req.body.username + "'").toString())
+                    .where("username = ?", req.body.username).toString())
         .then(function(rows) {
             if(!rows[0]) {
                 return res.status(401).json({error: 'Authentication failed. User not found.' });
