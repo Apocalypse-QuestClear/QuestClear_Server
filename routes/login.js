@@ -16,11 +16,11 @@ router.post('/', function (req, res, next) {
                     .where("username = ?", req.body.username).toString())
         .then(function(rows) {
             if(!rows[0]) {
-                return res.status(401).json({error: 'Authentication failed. User not found.' });
+                return res.status(403).json({error: 'Authentication failed. User not found.' });
             }
 
             if(!crypto.compare(req.body.password, rows[0].password)) {
-                return res.status(401).json({ error: 'Authentication failed. Wrong password.' });
+                return res.status(403).json({ error: 'Authentication failed. Wrong password.' });
             }
 
             var token = jwt.sign({uid : rows[0].uid}, config.secretToken, {expiresIn: '24h'});
