@@ -30,7 +30,7 @@ router.post('/', function(req, res, next){
                     .into('questions')
                     .set('title', req.body.title)
                     .set('category', req.body.category)
-                    .set('hideUser', squel.str(req.body.hideUser))
+                    .set('hideUser', req.body.hideUser)
                     .set('uid', res.locals.user.uid)
                     .set('time', squel.str('NOW()')).toString())
         .then(function(rows) {

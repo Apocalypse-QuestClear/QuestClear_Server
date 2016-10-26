@@ -45,7 +45,7 @@ router.post('/', function(req, res, next) {
                     .into('answers')
                     .set('qid', req.body.qid)
                     .set('title', req.body.title)
-                    .set('hideUser', squel.str(req.body.hideUser))
+                    .set('hideUser', req.body.hideUser)
                     .set('uid', res.locals.user.uid)
                     .set('time', squel.str('NOW()')).toString())
         .then(function (rows) {
@@ -54,7 +54,7 @@ router.post('/', function(req, res, next) {
                 return conn.query(squel.insert()
                                         .into('steps')
                                         .set('title', step.title)
-                                        .set('isItem', squel.str(step.isItem))
+                                        .set('isItem', step.isItem)
                                         .set('count', (step.count||'0'))
                                         .set('detail', (step.detail||''))
                                         .set('aid', _aid).toString());
