@@ -5,9 +5,7 @@ var router = require('express').Router();
 router.use('/users', require('./users'));
 router.use('/login', require('./login'));
 
-
 router.use(require('./verifyToken'));
-
 
 router.post('/logout', function(req, res, next) {return res.json({});});
 router.use('/auth', require('./auth'));
