@@ -42,4 +42,23 @@ router.post('/', function (req, res, next) {
         });
 });
 
+router.use(require('../verifyToken'));
+
+router.get('/:uid', function(req, res, next) {
+     conn.query(squel.select()
+                     .from('users')
+                     .where('uid = ?', req.params.uid).toString())
+         .then(function (rows) {
+             if(rows[0]) {
+                 return res.json({username: rows[0].username, email: rows[0].email});
+             }
+             else {
+                 return res.status(400).json({ error: 'Uid not exist.'});
+             }
+         }).catch(function (err) {
+             next(err);
+         });
+});
+
+
 module.exports = router;
