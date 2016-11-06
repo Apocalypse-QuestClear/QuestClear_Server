@@ -44,6 +44,56 @@ router.post('/', function (req, res, next) {
 
 router.use(require('../verifyToken'));
 
+router.put('/:uid',function(req,res,next){
+
+    if (!req.body.username) {
+        return res.status(400).json({error: 'Username is empty.'});
+    }
+
+    Promise.all([
+        conn.query(squel.select()
+                        .from('users')
+                        .where("uid = ?", res.locals.users.uid).toString()),
+        conn.query(squel.select()
+                        .from('users')
+                        .where("username = ?",req.body.username).toString())])
+        .then(function(rows){
+            if(!crypto.compare(req.body.oldPassword, rows[0][0].password)) {
+                res.status(403).json({ error: 'Authentication failed. Wrong password.' });
+                return;
+            }
+            if (rows[1][0]) {
+                res.status(409).json({error: 'Username already exists.'});
+                return;
+            }
+            else {
+                if(!req.body.password) {
+                    return conn.query(squel.update()
+                        .table('users')
+                        .set('username', req.body.username)
+                        .set('email', req.body.email)
+                        .where('uid = ?', res.locals.users.uid)
+                        .toString());
+                }
+                else {
+                    return conn.query(squel.update()
+                        .table('users')
+                        .set('username', req.body.username)
+                        .set('password', req.body.password)
+                        .set('email', req.body.email)
+                        .where('uid = ?', res.locals.users.uid)
+                        .toString());
+                }
+            }
+        }).then(function (rows) {
+            if(rows) {
+                return res.status(201).json({uid: rows.insertId});
+            }
+        }).catch(function (err) {
+            next(err);
+        });
+});
+
 router.get('/:uid', function(req, res, next) {
      conn.query(squel.select()
                      .from('users')

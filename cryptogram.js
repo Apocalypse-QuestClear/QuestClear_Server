@@ -2,7 +2,7 @@
  * Created by Kevin on 23/10/2016.
  */
 
-var bcrypt = require('bcrypt');
+var bcrypt = require('bcryptjs');
 
 var config = require('./config');
 
