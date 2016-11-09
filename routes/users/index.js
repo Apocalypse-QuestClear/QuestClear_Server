@@ -42,6 +42,7 @@ router.post('/', function (req, res, next) {
         });
 });
 
+
 router.use(require('../verifyToken'));
 
 router.put('/:uid',function(req,res,next){
@@ -122,5 +123,6 @@ router.get('/:uid', function(req, res, next) {
          });
 });
 
+router.use('/:uid/quests/', require('./quests'));
 
 module.exports = router;

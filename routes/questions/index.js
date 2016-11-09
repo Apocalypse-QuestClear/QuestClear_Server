@@ -25,7 +25,6 @@ router.post('/', function(req, res, next){
     else if (req.body.hideUser == null) {
         return res.status(400).json({ error: 'hideUser is empty,' });
     }
-
     conn.query(squel.insert()
                     .into('questions')
                     .set('title', req.body.title)
