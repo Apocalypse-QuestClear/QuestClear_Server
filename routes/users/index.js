@@ -72,7 +72,7 @@ router.put('/:uid',function(req,res,next){
                     return conn.query(squel.update()
                         .table('users')
                         .set('username', req.body.username)
-                        .set('email', req.body.email)
+                        .set('email', req.body.email || "")
                         .where('uid = ?', res.locals.user.uid)
                         .toString());
 
@@ -91,7 +91,7 @@ router.put('/:uid',function(req,res,next){
                             .table('users')
                             .set('username', req.body.username)
                             .set('password', crypto.encrypt(req.body.password))
-                            .set('email', req.body.email)
+                            .set('email', req.body.email || "")
                             .where('uid = ?', res.locals.user.uid)
                             .toString());
                     }
