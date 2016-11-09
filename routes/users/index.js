@@ -123,5 +123,6 @@ router.get('/:uid', function(req, res, next) {
          });
 });
 
+router.use('/:uid/quests/', require('./quests'));
 
 module.exports = router;
