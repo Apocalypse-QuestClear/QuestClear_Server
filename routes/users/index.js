@@ -53,15 +53,11 @@ router.put('/:uid',function(req,res,next){
     Promise.all([
         conn.query(squel.select()
                         .from('users')
-                        .where("uid = ?", res.locals.users.uid).toString()),
+                        .where("uid = ?", res.locals.user.uid).toString()),
         conn.query(squel.select()
                         .from('users')
                         .where("username = ?",req.body.username).toString())])
         .then(function(rows){
-            if(!crypto.compare(req.body.oldPassword, rows[0][0].password)) {
-                res.status(403).json({ error: 'Authentication failed. Wrong password.' });
-                return;
-            }
             if (rows[1][0]) {
                 res.status(409).json({error: 'Username already exists.'});
                 return;
@@ -72,17 +68,24 @@ router.put('/:uid',function(req,res,next){
                         .table('users')
                         .set('username', req.body.username)
                         .set('email', req.body.email)
-                        .where('uid = ?', res.locals.users.uid)
+                        .where('uid = ?', res.locals.user.uid)
                         .toString());
+
                 }
                 else {
-                    return conn.query(squel.update()
-                        .table('users')
-                        .set('username', req.body.username)
-                        .set('password', req.body.password)
-                        .set('email', req.body.email)
-                        .where('uid = ?', res.locals.users.uid)
-                        .toString());
+                    if(!crypto.compare(req.body.oldPassword, rows[0][0].password)) {
+                        res.status(403).json({ error: 'Authentication failed. Wrong password.' });
+                        return;
+                    }
+                   else{
+                        return conn.query(squel.update()
+                            .table('users')
+                            .set('username', req.body.username)
+                            .set('password', req.body.password)
+                            .set('email', req.body.email)
+                            .where('uid = ?', res.locals.user.uid)
+                            .toString());
+                    }
                 }
             }
         }).then(function (rows) {
