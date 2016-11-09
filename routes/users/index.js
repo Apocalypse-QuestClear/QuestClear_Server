@@ -50,13 +50,18 @@ router.put('/:uid',function(req,res,next){
         return res.status(400).json({error: 'Username is empty.'});
     }
 
+    if(req.params.uid != res.locals.user.uid){
+        return res.status(400).json({error: "You're not allowed to modify other's profile."});
+    }
+
     Promise.all([
         conn.query(squel.select()
                         .from('users')
                         .where("uid = ?", res.locals.user.uid).toString()),
         conn.query(squel.select()
                         .from('users')
-                        .where("username = ?",req.body.username).toString())])
+                        .where(squel.expr().and("username = ?",req.body.username)
+                                            .and("uid != ?", res.locals.user.uid)).toString())])
         .then(function(rows){
             if (rows[1][0]) {
                 res.status(409).json({error: 'Username already exists.'});
@@ -73,6 +78,10 @@ router.put('/:uid',function(req,res,next){
 
                 }
                 else {
+                    if(!req.body.oldPassword) {
+                        res.status(400).json({error: 'Oldpassword required.'});
+                        return ;
+                    }
                     if(!crypto.compare(req.body.oldPassword, rows[0][0].password)) {
                         res.status(403).json({ error: 'Authentication failed. Wrong password.' });
                         return;
@@ -81,7 +90,7 @@ router.put('/:uid',function(req,res,next){
                         return conn.query(squel.update()
                             .table('users')
                             .set('username', req.body.username)
-                            .set('password', req.body.password)
+                            .set('password', crypto.encrypt(req.body.password))
                             .set('email', req.body.email)
                             .where('uid = ?', res.locals.user.uid)
                             .toString());
@@ -90,7 +99,7 @@ router.put('/:uid',function(req,res,next){
             }
         }).then(function (rows) {
             if(rows) {
-                return res.status(201).json({uid: rows.insertId});
+                return res.status(200).json({});
             }
         }).catch(function (err) {
             next(err);
