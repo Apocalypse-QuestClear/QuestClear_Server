@@ -42,6 +42,7 @@ router.post('/', function (req, res, next) {
         });
 });
 
+
 router.use(require('../verifyToken'));
 
 router.get('/:uid', function(req, res, next) {
