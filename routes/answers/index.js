@@ -94,7 +94,6 @@ router.get('/:aid', function(req, res, next) {
                 _ans.steps = rows[0];
                 delete _ans.qid;
                 hideUser(rows[1][0]);
-                delete rows[1][0].time;
                 _ans.question = rows[1][0];
                 return res.json(_ans);
             }
@@ -110,13 +109,14 @@ router.get('/', function(req, res, next){
     var uid = req.query.uid;
     var qid = req.query.qid;
     var limit = parseInt(req.query.limit||'5') > 30? 30: parseInt(req.query.limit||'5');
-    var after = 0;//parseInt(req.query.after||'0');TODO: implement after<aid>
+    var after = parseInt(req.query.after||'0');
     var _ans;
     conn.query(squel.select()
                     .from(squel.select()
-                               .field('a.title', 'title').field('q.title', 'qtitle').field('category').field('a.qid', 'qid')
-                               .field('a.hideUser', 'hideUser').field('q.hideUser', 'qhideUser').field('a.uid', 'uid')
-                               .field('q.uid', 'quid').field('version').field('a.time', 'time').field('aid')
+                               .field('a.title', 'title').field('q.title', 'qtitle').field('category')
+                               .field('a.qid', 'qid').field('a.hideUser', 'hideUser').field('q.hideUser', 'qhideUser')
+                               .field('a.uid', 'uid').field('q.uid', 'quid').field('version').field('a.time', 'time')
+                               .field('aid').field('q.time', 'qtime')
                                .from('answers', 'a')
                                .from('questions', 'q')
                                .where('a.qid = q.qid'), 'T')
@@ -134,13 +134,15 @@ router.get('/', function(req, res, next){
                     qid: rows.qid,
                     uid: rows.qhideUser ? undefined : rows.quid,
                     title: rows.qtitle,
-                    category: rows.category
+                    category: rows.category,
+                    time: rows.qtime
                 };
                 delete rows.qid;
                 delete rows.qhideUser;
                 delete rows.quid;
                 delete rows.qtitle;
                 delete rows.category;
+                delete rows.qtime;
                 rows.question = question;
                 hideUser(rows);
                 aids.push(rows.aid);
@@ -159,6 +161,7 @@ router.get('/', function(req, res, next){
                 });
                 _ans[i].steps = steps[i];
             }
+            return
             return res.json(_ans);
         })
         .catch(function(err){

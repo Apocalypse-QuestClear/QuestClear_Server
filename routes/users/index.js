@@ -45,6 +45,8 @@ router.post('/', function (req, res, next) {
 
 router.use(require('../verifyToken'));
 
+
+
 router.put('/:uid',function(req,res,next){
 
     if (!req.body.username) {
@@ -121,6 +123,15 @@ router.get('/:uid', function(req, res, next) {
          }).catch(function (err) {
              next(err);
          });
+});
+
+router.use('/:uid/quests', function(req, res, next) {
+    if(req.params.uid != res.locals.user.uid){
+        return res.status(400).json({error: "You're not allowed to modify other's profile."});
+    }
+    else {
+        next();
+    }
 });
 
 router.use('/:uid/quests/', require('./quests'));
