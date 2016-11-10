@@ -129,11 +129,12 @@ router.get('/', function(req, res, next){
                                .from('questions', 'q')
                                .where('a.qid = q.qid'), 'T')
                     .where(
-                        squel.expr().and("T.title LIKE '%" + keyword + "%'")
-                            .or("T.qtitle LIKE '%" + keyword + "%'")
+                        squel.expr().and(
+                                squel.expr().or("T.title LIKE '%" + keyword + "%'")
+                                    .or("T.qtitle LIKE '%" + keyword + "%'"))
                             .and("T.category LIKE '%" + category + "%'")
-                            .and(uid ? "uid = '" + uid + "'": '1')
-                            .and(qid ? "qid = '" + qid + "'": '1'))
+                            .and(uid ? "T.uid = '" + uid + "'": '1')
+                            .and(qid ? "T.qid = '" + qid + "'": '1'))
                     .limit(limit)
                     .offset(after).toString())
         .then(function(data) {
@@ -170,7 +171,6 @@ router.get('/', function(req, res, next){
                 });
                 _ans[i].steps = steps[i];
             }
-
             return Promise.all(_ans.map(function(row) {
                 return addusername(row);
             }));
