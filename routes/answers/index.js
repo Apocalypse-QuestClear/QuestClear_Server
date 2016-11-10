@@ -161,7 +161,6 @@ router.get('/', function(req, res, next){
                 });
                 _ans[i].steps = steps[i];
             }
-            return
             return res.json(_ans);
         })
         .catch(function(err){
