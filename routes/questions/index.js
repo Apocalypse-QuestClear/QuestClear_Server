@@ -29,7 +29,7 @@ router.post('/', function(req, res, next){
     conn.query(squel.insert()
                     .into('questions')
                     .set('title', req.body.title)
-                    .set('category', req.body.category)
+                    .set('category', JSON.stringify(req.body.category))
                     .set('hideUser', req.body.hideUser)
                     .set('uid', res.locals.user.uid)
                     .set('time', squel.str('NOW()')).toString())
