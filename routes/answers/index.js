@@ -100,6 +100,7 @@ router.get('/:aid', function(req, res, next) {
                 _ans.steps = rows[0];
                 delete _ans.qid;
                 hideUser(rows[1][0]);
+                rows[1][0].category = JSON.parse(rows[1][0].category);
                 return addusername(rows[1][0]);
             }
         }).then(function(data2) {
@@ -116,7 +117,7 @@ router.get('/', function(req, res, next){
     var category = req.query.category||'';
     var uid = req.query.uid;
     var qid = req.query.qid;
-    var limit = parseInt(req.query.limit||'5') > 30? 30: parseInt(req.query.limit||'5');
+    var limit = parseInt(req.query.limit||'10') > 30? 30: parseInt(req.query.limit||'10');
     var after = parseInt(req.query.after||'0');
     var _ans;
     conn.query(squel.select()
@@ -144,7 +145,7 @@ router.get('/', function(req, res, next){
                     qid: rows.qid,
                     uid: rows.qhideUser ? undefined : rows.quid,
                     title: rows.qtitle,
-                    category: rows.category,
+                    category: JSON.parse(rows.category),
                     time: rows.qtime
                 };
                 delete rows.qid;

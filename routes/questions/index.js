@@ -45,7 +45,7 @@ router.get('/', function(req, res, next){
     var keyword = req.query.keyword||'';
     var category = req.query.category||'';
     var uid = req.query.uid;
-    var limit = parseInt(req.query.limit||'5') > 30? 30: parseInt(req.query.limit||'5');
+    var limit = parseInt(req.query.limit||'10') > 30? 30: parseInt(req.query.limit||'10');
     var after = parseInt(req.query.after||'0');
     conn.query(squel.select()
                     .from('questions')
@@ -60,6 +60,7 @@ router.get('/', function(req, res, next){
                 hideUser(row);
             });
             return Promise.all(rows.map(function(row) {
+                row.category = JSON.parse(row.category);
                 return addusername(row);
             }));
         }).then(function(data){
@@ -86,6 +87,7 @@ router.get('/:qid', function(req, res, next) {
             }
         }).then(function (data) {
             if(data) {
+                data.category = JSON.parse(data.category);
                 return res.json(data);
             }
         }).catch(function (err) {
