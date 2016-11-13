@@ -8,21 +8,34 @@ var squel = require('squel');
 //add to quests
 router.post('/:aid', function(req, res, next) {
     conn.query(squel.select()
-                    .from('steps')
-                    .where('aid = ?', req.params.aid).toString())
-        .then(function(rows) {
-            if(rows[0]) {
-                return Promise.all(rows.map(function (row) {
-                    return conn.query(squel.insert()
-                                            .into('quests')
-                                            .set('uid', res.locals.user.uid)
-                                            .set('aid', req.params.aid)
-                                            .set('sid', row.sid).toString());
-                }));
+                    .from('quests')
+                    .where(squel.expr().and('uid = ?', res.locals.user.uid)
+                                .and('aid = ?', req.params.aid)).toString())
+        .then(function (exs){
+            if(exs[0]) {
+                res.status(409).json({error: 'You have already add this answer to quest list.'})
+                return 'damn';
             }
             else {
-                res.status(400).json({error: "Invalid aid."});
-                return;
+                return conn.query(squel.select()
+                                        .from('steps')
+                                        .where('aid = ?', req.params.aid).toString());
+            }
+        }).then(function(rows) {
+            if(rows !== 'damn') {
+                if (rows[0]) {
+                    return Promise.all(rows.map(function (row) {
+                        return conn.query(squel.insert()
+                                                .into('quests')
+                                                .set('uid', res.locals.user.uid)
+                                                .set('aid', req.params.aid)
+                                                .set('sid', row.sid).toString());
+                    }));
+                }
+                else {
+                    res.status(400).json({error: "Invalid aid."});
+                    return;
+                }
             }
         }).then(function(data) {
             if(data) {
@@ -110,7 +123,8 @@ router.patch('/:aid/steps/:step_id', function(req, res, next) {
                 res.status(400).json({error: 'Invalid field "step_id"'});
                 return;
             }
-            if(!rows[0].isItem || (rows[0].isItem && req.body.progress >= 0 && req.body.progress <= rows[0].count)) {
+            if((!rows[0].isItem && (req.body.progress == 0 || req.body.progress == 1))
+                || (rows[0].isItem && req.body.progress >= 0 && req.body.progress <= rows[0].count)) {
                 return conn.query(squel.update()
                                         .table('quests')
                                         .set('progress', req.body.progress)
