@@ -48,9 +48,9 @@ router.delete('/questions/:qid', function(req,res,next){
 router.post('/answers/:aid', function(req,res,next){
 
     conn.query(squel.select()
-        .from('watches')
-        .where(squel.expr().and("uid = ?",res.locals.user.uid)
-                            .and("aid = ?",req.params.aid)).toString())
+                     .from('watches')
+                     .where(squel.expr().and("uid = ?",res.locals.user.uid)
+                                         .and("aid = ?",req.params.aid)).toString())
     .then(function(rows){
         if(rows[0]){
             res.status(409).json({error: 'You have already given attention to this answer.'});
