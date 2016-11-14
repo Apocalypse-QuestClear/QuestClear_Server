@@ -37,35 +37,40 @@ router.post('/', function(req, res, next) {
     else if ((req.body.steps).some(step => (step.isItem == null))) {
         return res.status(400).json({error: 'isItem of a step is empty.'});
     }
-    else if ((req.body.steps).some(step => (step.isItem ==='true' && !step.count))) {  //不允许count为0
+    else if ((req.body.steps).some(step => (step.isItem === 'true' && !step.count))) {  //不允许count为0
         return res.status(400).json({error: "isItem of a step is True but it's Count is empty/0."});
     }
 
     var _aid;
-    conn.query(squel.insert()
-                    .into('answers')
-                    .set('qid', req.body.qid)
-                    .set('title', req.body.title)
-                    .set('hideUser', req.body.hideUser)
-                    .set('uid', res.locals.user.uid)
-                    .set('time', squel.str('NOW()'))
-                    .set('version', '1').toString())
-        .then(function (rows) {
-            _aid = rows.insertId;
-            return Promise.all(req.body.steps.map(function (step) {
-                return conn.query(squel.insert()
-                                        .into('steps')
-                                        .set('title', step.title)
-                                        .set('isItem', step.isItem)
-                                        .set('count', (step.count||'0'))
-                                        .set('detail', (step.detail||''))
-                                        .set('aid', _aid).toString());
-            }));
-        }).then(function() {
-            return res.status(201).json({aid: _aid});
-        }).catch(function (err) {
-            next(err);
-        });
+    conn.query('start transaction').then(function () {
+        return conn.query(squel.insert()
+                                .into('answers')
+                                .set('qid', req.body.qid)
+                                .set('title', req.body.title)
+                                .set('hideUser', req.body.hideUser)
+                                .set('uid', res.locals.user.uid)
+                                .set('time', squel.str('NOW()'))
+                                .set('version', '1').toString())
+            .then(function (rows) {
+                _aid = rows.insertId;
+                return Promise.all(req.body.steps.map(function (step) {
+                    return conn.query(squel.insert()
+                                            .into('steps')
+                                            .set('title', step.title)
+                                            .set('isItem', step.isItem)
+                                            .set('count', (step.count || '0'))
+                                            .set('detail', (step.detail || ''))
+                                            .set('aid', _aid).toString());
+                }));
+            }).then(function () {
+                return conn.query('commit');
+            }).then(function () {
+                return res.status(201).json({aid: _aid});
+            }).catch(function (err) {
+                conn.query('rollback');
+                next(err);
+            });
+    })
 });
 
 //查看回答
