@@ -123,6 +123,17 @@ router.get('/:uid', function(req, res, next) {
          });
 });
 
+router.use('/:uid/watches/', function(req,res,next){
+    if(req.params.uid != res.locals.user.uid){
+        return res.status(400).json({error: "You're not allowed to modify other's profile."});
+    }
+    else {
+        next();
+    }
+});
+router.use('/:uid/watches/', require('./watches'));
+
+
 router.use('/:uid/quests/', require('./quests'));
 
 module.exports = router;

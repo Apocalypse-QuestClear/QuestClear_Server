@@ -19,9 +19,5 @@ router.post('/', function (req, res, next) {
         });
 });
 
-router.put('/',function(req,res,next){
-
-    conn.query(squel.insert())
-})
 
 module.exports = router;
