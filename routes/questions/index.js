@@ -4,6 +4,7 @@
 var router = require('express').Router();
 
 var conn = require(__base + 'connection');
+var addusername = require('../addUsername');
 var squel = require('squel');
 
 function hideUser(row) {
@@ -28,7 +29,7 @@ router.post('/', function(req, res, next){
     conn.query(squel.insert()
                     .into('questions')
                     .set('title', req.body.title)
-                    .set('category', req.body.category)
+                    .set('category', JSON.stringify(req.body.category))
                     .set('hideUser', req.body.hideUser)
                     .set('uid', res.locals.user.uid)
                     .set('time', squel.str('NOW()')).toString())
@@ -44,8 +45,8 @@ router.get('/', function(req, res, next){
     var keyword = req.query.keyword||'';
     var category = req.query.category||'';
     var uid = req.query.uid;
-    var limit = parseInt(req.query.limit||'5') > 30? 30: parseInt(req.query.limit||'5');
-    var after = 0;//parseInt(req.query.after||'0');TODO: implement after<qid>
+    var limit = parseInt(req.query.limit||'10') > 30? 30: parseInt(req.query.limit||'10');
+    var after = parseInt(req.query.after||'0');
     conn.query(squel.select()
                     .from('questions')
                     .where(
@@ -58,28 +59,38 @@ router.get('/', function(req, res, next){
             rows.forEach(function(row) {
                 hideUser(row);
             });
-            return res.json(rows);
-        })
-        .catch(function(err){
+            return Promise.all(rows.map(function(row) {
+                row.category = JSON.parse(row.category);
+                return addusername(row);
+            }));
+        }).then(function(data){
+            return res.json(data);
+        }).catch(function(err){
             next(err);
         });
 });
 
 //查看问题
-router.get('/:qid', function(req, res, next){
+router.get('/:qid', function(req, res, next) {
     conn.query(squel.select()
-                    .from('questions')
-                    .where("qid = ?", req.params.qid).toString())
-        .then(function(rows) {
-            if(rows[0]) {
+        .from('questions')
+        .where("qid = ?", req.params.qid).toString())
+        .then(function (rows) {
+            if (rows[0]) {
                 delete rows[0].qid;
                 hideUser(rows[0]);
-                return res.json(rows[0]);
+                return addusername(rows[0]);
             }
             else {
-                return res.status(400).json({ error: 'No such qid.'});
+                res.status(400).json({error: 'No such qid.'});
+                return;
             }
-        }).catch(function(err) {
+        }).then(function (data) {
+            if(data) {
+                data.category = JSON.parse(data.category);
+                return res.json(data);
+            }
+        }).catch(function (err) {
             next(err);
         });
 });

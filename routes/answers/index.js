@@ -5,6 +5,7 @@ var router = require('express').Router();
 
 var conn = require(__base + 'connection');
 var squel = require('squel');
+var addusername = require('../addUsername');
 
 function hideUser(row) {
     if(row.hideUser) {
@@ -47,7 +48,8 @@ router.post('/', function(req, res, next) {
                     .set('title', req.body.title)
                     .set('hideUser', req.body.hideUser)
                     .set('uid', res.locals.user.uid)
-                    .set('time', squel.str('NOW()')).toString())
+                    .set('time', squel.str('NOW()'))
+                    .set('version', '1').toString())
         .then(function (rows) {
             _aid = rows.insertId;
             return Promise.all(req.body.steps.map(function (step) {
@@ -76,17 +78,21 @@ router.get('/:aid', function(req, res, next) {
             if(rows[0]) {
                 delete rows[0].aid;
                 hideUser(rows[0]);
-                _ans = rows[0];
-                return Promise.all([conn.query(squel.select()
-                                        .from('steps')
-                                        .where("aid = ?", req.params.aid).toString()),
-                                    conn.query(squel.select()
-                                        .from('questions')
-                                        .where("qid = ?", rows[0].qid).toString())]);
+                return addusername(rows[0]);
             }
             else {
                 res.status(400).json({ error: 'No such aid.'});
                 return;
+            }
+        }).then(function(data) {
+            if(data) {
+                _ans = data;
+                return Promise.all([conn.query(squel.select()
+                                                    .from('steps')
+                                                    .where("aid = ?", req.params.aid).toString()),
+                                    conn.query(squel.select()
+                                                    .from('questions')
+                                                    .where("qid = ?", data.qid).toString())]);
             }
         }).then(function(rows) {
             if(rows) {
@@ -94,10 +100,12 @@ router.get('/:aid', function(req, res, next) {
                 _ans.steps = rows[0];
                 delete _ans.qid;
                 hideUser(rows[1][0]);
-                delete rows[1][0].time;
-                _ans.question = rows[1][0];
-                return res.json(_ans);
+                rows[1][0].category = JSON.parse(rows[1][0].category);
+                return addusername(rows[1][0]);
             }
+        }).then(function(data2) {
+            _ans.question = data2;
+            return res.json(_ans);
         }).catch(function(err) {
             next(err);
         });
@@ -109,22 +117,25 @@ router.get('/', function(req, res, next){
     var category = req.query.category||'';
     var uid = req.query.uid;
     var qid = req.query.qid;
-    var limit = parseInt(req.query.limit||'5') > 30? 30: parseInt(req.query.limit||'5');
-    var after = 0;//parseInt(req.query.after||'0');TODO: implement after<aid>
+    var limit = parseInt(req.query.limit||'10') > 30? 30: parseInt(req.query.limit||'10');
+    var after = parseInt(req.query.after||'0');
     var _ans;
     conn.query(squel.select()
                     .from(squel.select()
-                               .field('a.title', 'title').field('q.title', 'qtitle').field('category').field('a.qid', 'qid')
-                               .field('a.hideUser', 'hideUser').field('q.hideUser', 'qhideUser').field('a.uid', 'uid')
-                               .field('q.uid', 'quid').field('version').field('a.time', 'time').field('aid')
+                               .field('a.title', 'title').field('q.title', 'qtitle').field('category')
+                               .field('a.qid', 'qid').field('a.hideUser', 'hideUser').field('q.hideUser', 'qhideUser')
+                               .field('a.uid', 'uid').field('q.uid', 'quid').field('version').field('a.time', 'time')
+                               .field('aid').field('q.time', 'qtime')
                                .from('answers', 'a')
                                .from('questions', 'q')
                                .where('a.qid = q.qid'), 'T')
                     .where(
-                        squel.expr().and("T.title LIKE '%" + keyword + "%'")
+                        squel.expr().and(
+                                squel.expr().or("T.title LIKE '%" + keyword + "%'")
+                                    .or("T.qtitle LIKE '%" + keyword + "%'"))
                             .and("T.category LIKE '%" + category + "%'")
-                            .and(uid ? "uid = '" + uid + "'": '1')
-                            .and(qid ? "qid = '" + qid + "'": '1'))
+                            .and(uid ? "T.uid = '" + uid + "'": '1')
+                            .and(qid ? "T.qid = '" + qid + "'": '1'))
                     .limit(limit)
                     .offset(after).toString())
         .then(function(data) {
@@ -134,13 +145,15 @@ router.get('/', function(req, res, next){
                     qid: rows.qid,
                     uid: rows.qhideUser ? undefined : rows.quid,
                     title: rows.qtitle,
-                    category: rows.category
+                    category: JSON.parse(rows.category),
+                    time: rows.qtime
                 };
                 delete rows.qid;
                 delete rows.qhideUser;
                 delete rows.quid;
                 delete rows.qtitle;
                 delete rows.category;
+                delete rows.qtime;
                 rows.question = question;
                 hideUser(rows);
                 aids.push(rows.aid);
@@ -159,9 +172,19 @@ router.get('/', function(req, res, next){
                 });
                 _ans[i].steps = steps[i];
             }
+            return Promise.all(_ans.map(function(row) {
+                return addusername(row);
+            }));
+        }).then(function(data2) {
+            return Promise.all(data2.map(function(row) {
+                return addusername(row.question);
+            }));
+        }).then(function(data3) {
+            for(var i in _ans) {
+                _ans[i].question = data3[i];
+            }
             return res.json(_ans);
-        })
-        .catch(function(err){
+        }).catch(function(err){
             next(err);
         });
 });
