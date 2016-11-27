@@ -47,12 +47,18 @@ router.get('/', function(req, res, next){
     var uid = req.query.uid;
     var limit = parseInt(req.query.limit||'10') > 30? 30: parseInt(req.query.limit||'10');
     var after = parseInt(req.query.after||'0');
+
+    var _hideUser = "hideUser = '0'";
+    if(res.locals.user.uid == req.query.uid) {
+        _hideUser = "1";
+    }
     conn.query(squel.select()
                     .from('questions')
                     .where(
                         squel.expr().and("title LIKE '%" + keyword + "%'")
                                     .and("category LIKE '%" + category + "%'")
-                                    .and(uid ? "uid = '" + uid + "'": '1'))
+                                    .and(uid ? "uid = '" + uid + "'": '1')
+                                    .and(_hideUser))
                     .limit(limit)
                     .offset(after).toString())
         .then(function(rows) {
