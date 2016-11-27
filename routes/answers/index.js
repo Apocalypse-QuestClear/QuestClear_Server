@@ -125,6 +125,12 @@ router.get('/', function(req, res, next){
     var limit = parseInt(req.query.limit||'10') > 30? 30: parseInt(req.query.limit||'10');
     var after = parseInt(req.query.after||'0');
     var _ans;
+    var _hideUser = "hideUser = '0'";
+
+    if(res.locals.user.uid == uid) {
+        _hideUser = "1";
+    }
+
     conn.query(squel.select()
                     .from(squel.select()
                                .field('a.title', 'title').field('q.title', 'qtitle').field('category')
@@ -137,10 +143,11 @@ router.get('/', function(req, res, next){
                     .where(
                         squel.expr().and(
                                 squel.expr().or("T.title LIKE '%" + keyword + "%'")
-                                    .or("T.qtitle LIKE '%" + keyword + "%'"))
-                            .and("T.category LIKE '%" + category + "%'")
-                            .and(uid ? "T.uid = '" + uid + "'": '1')
-                            .and(qid ? "T.qid = '" + qid + "'": '1'))
+                                            .or("T.qtitle LIKE '%" + keyword + "%'"))
+                                    .and("T.category LIKE '%" + category + "%'")
+                                    .and(uid ? "T.uid = '" + uid + "'": '1')
+                                    .and(qid ? "T.qid = '" + qid + "'": '1')
+                                    .and(_hideUser))
                     .limit(limit)
                     .offset(after).toString())
         .then(function(data) {
