@@ -49,7 +49,11 @@ router.get('/', function(req, res, next){
     var after = parseInt(req.query.after||'0');
 
     var _hideUser = "hideUser = '0'";
-    if(res.locals.user.uid == req.query.uid) {
+
+    if(!uid) {
+        _hideUser = "1";
+    }
+    if(res.locals.user.uid == uid) {
         _hideUser = "1";
     }
     conn.query(squel.select()

@@ -127,6 +127,9 @@ router.get('/', function(req, res, next){
     var _ans;
     var _hideUser = "hideUser = '0'";
 
+    if(!uid) {
+        _hideUser = "1";
+    }
     if(res.locals.user.uid == uid) {
         _hideUser = "1";
     }
