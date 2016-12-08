@@ -18,9 +18,9 @@ router.post('/questions/:qid', function(req,res,next){
         }
         else{
             return conn.query(squel.insert()
-                                     .into('watches')
-                                     .set('uid',res.locals.user.uid)
-                                     .set('qid',req.params.qid).toString());
+                .into('watches')
+                .set('uid',res.locals.user.uid)
+                .set('qid',req.params.qid).toString());
         }
     }).then(function (rows) {
         if(rows) {
@@ -57,7 +57,7 @@ router.post('/answers/:aid', function(req,res,next){
             return;
         }
         else{
-            conn.query(squel.insert()
+           return conn.query(squel.insert()
                              .into('watches')
                              .set('uid',res.locals.user.uid)
                              .set('aid',req.params.aid).toString());
@@ -86,6 +86,52 @@ router.delete('/answers/:aid', function(req,res,next){
         }).catch(function (err) {
         next(err);
     });
+})
+
+router.get('/questions',function(req,res,next){
+    conn.query(squel.select()
+                     .field('qid')
+                     .from('watches')
+                     .where(squel.expr().and("uid = ?",res.locals.user.uid)
+                                         .and("qid is not null")).toString())
+        .then(function(rows){
+            if(rows[0]){
+                var _res = [];
+                rows.forEach(function(row) {
+                    _res.push(row.qid);
+                });
+                return res.json(_res);
+            }
+            else{
+                return res.status(400).json({ error: 'You have not followed any question.'});
+            }
+        }).catch(function (err) {
+        next(err);
+    });
+
+})
+
+router.get('/answers',function(req,res,next){
+    conn.query(squel.select()
+                     .field('aid')
+                     .from('watches')
+                     .where(squel.expr().and("uid = ?",res.locals.user.uid)
+                                         .and("aid is not null")).toString())
+        .then(function(rows){
+            if(rows[0]){
+                var _res = [];
+                rows.forEach(function(row) {
+                    _res.push(row.aid);
+                });
+                return res.json(_res);
+            }
+            else{
+                return res.status(400).json({ error: 'You have not followed any answer.'});
+            }
+        }).catch(function (err) {
+        next(err);
+    });
+
 })
 
 module.exports = router;

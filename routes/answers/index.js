@@ -204,4 +204,23 @@ router.get('/', function(req, res, next){
         });
 });
 
+router.post('/rate', function(req, res, next){
+
+    var _cid;
+    return conn.query(squel.insert()
+                     .into('comments')
+                     .set('uid',res.locals.user.uid)
+                     .set('aid',req.body.aid)
+                     .set('rate',req.body.rate)
+                     .set('time', squel.str('NOW()')).toString()
+    ) .then(function (rows) {
+        _cid = rows.insertId;
+        if(rows){
+            return res.status(200).json({});
+        }
+    }).catch(function (err) {
+        next(err);
+    });
+})
+
 module.exports = router;

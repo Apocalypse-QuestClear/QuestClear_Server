@@ -145,5 +145,6 @@ router.use('/:uid/watches/', function(req,res,next){
     }
 });
 router.use('/:uid/watches/', require('./watches'));
+router.use('/:aid/quests/', require('../answer/index'));
 
 module.exports = router;
