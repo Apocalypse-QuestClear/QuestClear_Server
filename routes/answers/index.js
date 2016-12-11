@@ -204,23 +204,50 @@ router.get('/', function(req, res, next){
         });
 });
 
-router.post('/rate', function(req, res, next){
+router.post('/:aid/rate', function(req, res, next){
 
-    var _cid;
-    return conn.query(squel.insert()
-                     .into('comments')
-                     .set('uid',res.locals.user.uid)
-                     .set('aid',req.body.aid)
-                     .set('rate',req.body.rate)
-                     .set('time', squel.str('NOW()')).toString()
-    ) .then(function (rows) {
-        _cid = rows.insertId;
-        if(rows){
-            return res.status(200).json({});
+    conn.query(squel.select()
+        .from('comments')
+        .where(squel.expr().and("uid = ?",res.locals.user.uid)
+                            .and("aid = ?",req.params.aid)).toString())
+
+        .then(function(rows){
+
+            if(rows[0]){
+               return conn.query(squel.update()
+                   .table('comments')
+                   .set('rate',req.body.rate)
+                   .set('time', squel.str('NOW()'))
+                   .where(squel.expr().and("uid = ?",res.locals.user.uid)
+                       .and("aid = ?",req.params.aid)).toString())
+            }
+            else{
+                _cid = rows.insertId;
+                return conn.query(squel.insert()
+                    .into('comments')
+                    .set('uid',res.locals.user.uid)
+                    .set('aid',req.params.aid)
+                    .set('rate',req.body.rate)
+                    .set('time', squel.str('NOW()')).toString()
+                )
+            }
+        })
+        .then(function (rows) {
+            if(rows){
+               return res.status(200).json({});
         }
     }).catch(function (err) {
         next(err);
     });
 })
+
+router.use('/:aid/comments/', function(req,res,next){
+
+        res.locals.user.aid = req.params.aid;
+        next();
+
+
+});
+router.use('/:aid/comments/', require('./comments'));
 
 module.exports = router;
