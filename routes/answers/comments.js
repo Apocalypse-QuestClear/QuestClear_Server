@@ -13,8 +13,7 @@ router.post('/', function(req, res, next) {
     conn.query(squel.select()
         .from('comments')
         .where(squel.expr().and("uid = ?", res.locals.user.uid)
-            .and("aid = ?", res.locals.user.aid)
-            .and("content is null")).toString())
+            .and("aid = ?", res.locals.user.aid)).toString())
         .then(function (rows) {
 
             if (rows[0]) {
@@ -33,16 +32,7 @@ router.post('/', function(req, res, next) {
             }
             else {
 
-                conn.query(squel.select()
-                    .from('comments')
-                    .where(squel.expr().and("uid = ?", res.locals.user.uid)
-                        .and("aid = ?", res.locals.user.aid)
-                        .and("content is not null")).toString())
-                .then(function(rows){
-                    if(rows[0]){
-                        return res.status(409).json({error: 'You have already comment this answer.'});
-                    }
-                    else{
+
                         conn.query(squel.insert()
                             .into('comments')
                             .set('uid', res.locals.user.uid)
@@ -51,8 +41,7 @@ router.post('/', function(req, res, next) {
                             .set('content', req.body.content)
                             .set('time', squel.str('NOW()')).toString())
                         return res.status(201).json({cid: rows.insertId})
-                    }
-                })
+
 
 
             }

@@ -103,7 +103,8 @@ router.get('/questions',function(req,res,next){
                 return res.json(_res);
             }
             else{
-                return res.status(400).json({ error: 'You have not followed any question.'});
+                var arr = [];
+                return res.json(arr);
             }
         }).catch(function (err) {
         next(err);
@@ -126,7 +127,8 @@ router.get('/answers',function(req,res,next){
                 return res.json(_res);
             }
             else{
-                return res.status(400).json({ error: 'You have not followed any answer.'});
+                var arr = [];
+                return res.json(arr);
             }
         }).catch(function (err) {
         next(err);
