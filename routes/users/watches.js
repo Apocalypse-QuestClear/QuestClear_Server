@@ -103,8 +103,8 @@ router.get('/questions',function(req,res,next){
                 return res.json(_res);
             }
             else{
-                var arr = [];
-                return res.json(arr);
+
+                return res.json([]);
             }
         }).catch(function (err) {
         next(err);
@@ -127,8 +127,7 @@ router.get('/answers',function(req,res,next){
                 return res.json(_res);
             }
             else{
-                var arr = [];
-                return res.json(arr);
+                return res.json([]);
             }
         }).catch(function (err) {
         next(err);
