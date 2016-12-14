@@ -19,7 +19,11 @@ router.post('/:aid', function(req, res, next) {
             else {
                 return conn.query(squel.select()
                                         .from('steps')
-                                        .where('aid = ?', req.params.aid).toString());
+                                        .where('aid = ?', req.params.aid)
+                                        .where('version = ?', squel.select()
+                                                                    .field('MAX(version)')
+                                                                    .from('answers')
+                                                                    .where('aid = ?', req.params.aid)).toString());
             }
         }).then(function(rows) {
             if(rows !== 'damn') {
@@ -116,8 +120,7 @@ router.delete('/:aid', function(req, res, next) {
 router.patch('/:aid/steps/:step_id', function(req, res, next) {
     conn.query(squel.select()
                     .from('steps')
-                    .where(squel.expr().and('sid = ?', req.params.step_id)
-                                .and('aid = ?', req.params.aid)).toString())
+                    .where('sid = ?', req.params.step_id).toString())
         .then(function(rows) {
             if(!rows[0]) {
                 res.status(400).json({error: 'Invalid field "step_id"'});
