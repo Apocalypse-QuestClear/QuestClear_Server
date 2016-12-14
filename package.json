@@ -8,8 +8,10 @@
   "dependencies": {
     "bcryptjs": "^2.3.0",
     "body-parser": "~1.15.1",
+    "child-process-promise": "^2.2.0",
     "cookie-parser": "~1.4.3",
     "debug": "~2.2.0",
+    "encoding": "^0.1.12",
     "express": "~4.13.4",
     "jade": "~1.11.0",
     "jsonwebtoken": "^7.1.9",
