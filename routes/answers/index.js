@@ -239,15 +239,19 @@ router.post('/:aid/rate', function(req, res, next){
     }).catch(function (err) {
         next(err);
     });
-})
+});
 
 router.use('/:aid/comments/', function(req,res,next){
-
-        res.locals.user.aid = req.params.aid;
-        next();
-
-
+    res.locals.user.aid = req.params.aid;
+    next();
 });
 router.use('/:aid/comments/', require('./comments'));
+
+router.use('/:aid/edits', function(req, res, next) {
+    res.locals.user.aid = req.params.aid;
+    next();
+});
+
+router.use('/:aid/edits', require('./edits'));
 
 module.exports = router;

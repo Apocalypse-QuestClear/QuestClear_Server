@@ -3,6 +3,9 @@
 config.js
 # IntelliJ
 .idea
+#Modify
+Modify
+Modify.dSYM
 
 ### Windows template
 # Windows image file caches
@@ -58,3 +61,4 @@ jspm_packages
 
 # Optional REPL history
 .node_repl_history
+Modify.dSYM/
