@@ -92,7 +92,7 @@ router.get('/:eid', function(req, res, next) {
 
     var _ans = {};
     var chunks = [];
-    var str = '';
+    var edit;
 
     _ans.type = 'modify';
     Promise.all([conn.query(squel.select()
@@ -110,6 +110,7 @@ router.get('/:eid', function(req, res, next) {
             delete row.eid;
         });
         _ans.PullRequest = rows[0];
+        edit = rows[1][0];
         return conn.query(squel.select()
                                 .from('steps')
             .where(squel.expr().and('aid = ?', res.locals.user.aid)
@@ -135,7 +136,8 @@ router.get('/:eid', function(req, res, next) {
         }
     }).then(function(result) {
         if(result.stdout) {
-            return res.json(JSON.parse(result.stdout));
+            edit.steps = JSON.parse(result.stdout);
+            return res.json(edit);
         }
     }).catch(function(err) {
         next(err);
