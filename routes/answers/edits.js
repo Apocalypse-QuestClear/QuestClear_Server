@@ -5,6 +5,7 @@ var router = require('express').Router();
 var conn = require(__base + 'connection');
 var squel = require('squel');
 var addusername = require('../addUsername');
+var spawn = require(__base + 'child-process-promise-encoding')('gbk').spawn;
 
 //编辑请求
 router.post('/', function(req, res, next) {
@@ -90,6 +91,9 @@ router.get('/', function(req, res, next) {
 router.get('/:eid', function(req, res, next) {
 
     var _ans = {};
+    var chunks = [];
+    var str = '';
+
     _ans.type = 'modify';
     Promise.all([conn.query(squel.select()
                     .from('edit_steps')
@@ -123,9 +127,9 @@ router.get('/:eid', function(req, res, next) {
                 delete data.version;
             });
             _ans.CorrespondAnswer = datas;
-            var spawn = require('child-process-promise').spawn;
+
             var p = spawn('./Modify', [], { capture: ["stdout", "stderr"] });
-            p.childProcess.stdin.write(new Buffer(JSON.stringify(_ans)));
+            p.childProcess.stdin.writeEncoded(JSON.stringify(_ans));
             p.childProcess.stdin.end();
             return p;
         }

@@ -13,6 +13,7 @@
     "debug": "~2.2.0",
     "encoding": "^0.1.12",
     "express": "~4.13.4",
+    "iconv-lite": "^0.4.15",
     "jade": "~1.11.0",
     "jsonwebtoken": "^7.1.9",
     "morgan": "~1.7.0",
