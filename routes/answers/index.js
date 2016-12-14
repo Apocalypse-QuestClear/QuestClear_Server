@@ -170,6 +170,7 @@ router.get('/', function(req, res, next){
                                     .and(qid ? "T.qid = '" + qid + "'": '1')
                                     .and(_hideUser))
                     .limit(limit)
+                    .order('T.rate', false)
                     .offset(after).toString())
         .then(function(data) {
             var aids = [];
