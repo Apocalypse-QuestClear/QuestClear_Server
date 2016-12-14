@@ -5,7 +5,6 @@ var router = require('express').Router();
 
 var conn = require(__base + 'connection');
 var squel = require('squel');
-var addusername = require('../addUsername');
 
 router.post('/', function(req, res, next) {
 

@@ -60,7 +60,8 @@ router.post('/', function(req, res, next) {
                                             .set('isItem', step.isItem)
                                             .set('count', (step.count || '0'))
                                             .set('detail', (step.detail || ''))
-                                            .set('aid', _aid).toString());
+                                            .set('aid', _aid)
+                                            .set('version', '1').toString());
                 }));
             }).then(function () {
                 return conn.query('commit');
@@ -94,15 +95,29 @@ router.get('/:aid', function(req, res, next) {
                 _ans = data;
                 return Promise.all([conn.query(squel.select()
                                                     .from('steps')
-                                                    .where("aid = ?", req.params.aid).toString()),
+                                                    .where(squel.expr().and("aid = ?", req.params.aid)
+                                                                .and('version = ?', squel.select()
+                                                                                        .field('MAX(version)')
+                                                                                        .from('answers')
+                                                                                        .where('aid = ?', req.params.aid))).toString()),
                                     conn.query(squel.select()
                                                     .from('questions')
-                                                    .where("qid = ?", data.qid).toString())]);
+                                                    .where("qid = ?", data.qid).toString()),
+                                    conn.query(squel.select()
+                                                    .field('AVG(rate)', 'rate')
+                                                    .from('comments')
+                                                    .where('aid = ?', req.params.aid).toString())]);
             }
         }).then(function(rows) {
             if(rows) {
                 rows[0].forEach((row) => {delete row.sid;delete row.aid;});
                 _ans.steps = rows[0];
+                if(rows[2][0].rate === null) {
+                    _ans.rate = 0;
+                }
+                else {
+                    _ans.rate = rows[2][0].rate;
+                }
                 delete _ans.qid;
                 hideUser(rows[1][0]);
                 rows[1][0].category = JSON.parse(rows[1][0].category);
@@ -133,14 +148,17 @@ router.get('/', function(req, res, next){
     if(res.locals.user.uid == uid) {
         _hideUser = "1";
     }
-
     conn.query(squel.select()
                     .from(squel.select()
                                .field('a.title', 'title').field('q.title', 'qtitle').field('category')
                                .field('a.qid', 'qid').field('a.hideUser', 'hideUser').field('q.hideUser', 'qhideUser')
                                .field('a.uid', 'uid').field('q.uid', 'quid').field('version').field('a.time', 'time')
-                               .field('aid').field('q.time', 'qtime')
-                               .from('answers', 'a')
+                               .field('aid').field('q.time', 'qtime').field('rate')
+                               .from(squel.select()
+                                           .field('S.aid', 'aid').field('rate').field('title').field('qid').field('uid')
+                                           .field('hideUser').field('time').field('version')
+                                           .from('Scored_Answers', 'S')
+                                           .join('Latest_Answer', 'l', 'S.aid = l.aid'), 'a')
                                .from('questions', 'q')
                                .where('a.qid = q.qid'), 'T')
                     .where(
@@ -171,13 +189,14 @@ router.get('/', function(req, res, next){
                 delete rows.qtime;
                 rows.question = question;
                 hideUser(rows);
-                aids.push(rows.aid);
+                aids.push([rows.aid, rows.version]);
             });
             _ans = data;
-            return Promise.all(aids.map(function(aid) {
+            return Promise.all(aids.map(function(row) {
                 return conn.query(squel.select()
                                         .from('steps')
-                                        .where("aid = ?", aid).toString());
+                                        .where(squel.expr().and("aid = ?", row[0])
+                                                    .and('version = ?', row[1])).toString());
             }));
         }).then(function(steps) {
             for(var i in _ans) {

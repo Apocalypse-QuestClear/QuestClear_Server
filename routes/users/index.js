@@ -73,11 +73,11 @@ router.put('/:uid',function(req,res,next){
             else {
                 if(!req.body.password) {
                     return conn.query(squel.update()
-                        .table('users')
-                        .set('username', req.body.username)
-                        .set('email', req.body.email || "")
-                        .where('uid = ?', res.locals.user.uid)
-                        .toString());
+                                            .table('users')
+                                            .set('username', req.body.username)
+                                            .set('email', req.body.email || "")
+                                            .where('uid = ?', res.locals.user.uid)
+                                            .toString());
 
                 }
                 else {
@@ -91,12 +91,12 @@ router.put('/:uid',function(req,res,next){
                     }
                    else{
                         return conn.query(squel.update()
-                            .table('users')
-                            .set('username', req.body.username)
-                            .set('password', crypto.encrypt(req.body.password))
-                            .set('email', req.body.email || "")
-                            .where('uid = ?', res.locals.user.uid)
-                            .toString());
+                                                .table('users')
+                                                .set('username', req.body.username)
+                                                .set('password', crypto.encrypt(req.body.password))
+                                                .set('email', req.body.email || "")
+                                                .where('uid = ?', res.locals.user.uid)
+                                                .toString());
                     }
                 }
             }
