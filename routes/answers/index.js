@@ -78,7 +78,7 @@ router.post('/', function(req, res, next) {
 router.get('/:aid', function(req, res, next) {
     var _ans;
     conn.query(squel.select()
-        .from('answers')
+        .from('Latest_Answer')
         .where("aid = ?", req.params.aid).toString())
         .then(function(rows) {
             if(rows[0]) {
