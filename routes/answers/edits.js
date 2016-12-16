@@ -94,12 +94,19 @@ router.get('/:eid', function(req, res, next) {
 
     _ans.type = 'modify';
     Promise.all([conn.query(squel.select()
-                    .from('edit_steps')
-                    .where('eid = ?', req.params.eid).toString()),
+                                .from('edit_steps')
+                                .where('eid = ?', req.params.eid).toString()),
                 conn.query(squel.select()
-                    .from('edits')
-                    .where('eid = ?', req.params.eid).toString())]
+                                .from('edits')
+                                .where('eid = ?', req.params.eid).toString()),
+                conn.query(squel.select()
+                                .from('Latest_Answer')
+                                .where('aid = ?', res.locals.user.aid).toString())]
     ).then(function(rows) {
+        if(!rows[0][0]) {
+            res.status(400).json({error: "No such eid."});
+            return;
+        }
         rows[0].map(function(row) {
             row.isItem = (row.isItem == 1);
             row.index = row.e_index;
@@ -109,33 +116,43 @@ router.get('/:eid', function(req, res, next) {
         });
         _ans.PullRequest = rows[0];
         edit = rows[1][0];
+        if(rows[2][0].uid === rows[1][0].uid) {
+            edit.isAuthor = true;
+        }
+        else {
+            edit.isAuthor = false;
+        }
         return conn.query(squel.select()
                                 .from('steps')
                                 .where(squel.expr().and('aid = ?', res.locals.user.aid)
                                             .and('version = ?', rows[1][0].version)).toString());
     }).then(function(datas) {
-        if(!datas[0]) {
-            res.status(400).json({error: 'No such aid and version.'});
-            return;
-        }
-        else {
-            datas.map(function(data) {
-                data.isItem = (data.isItem == 1);
-                delete data.sid;
-                delete data.aid;
-                delete data.version;
-            });
-            _ans.CorrespondAnswer = datas;
+        if(datas) {
+            if (!datas[0]) {
+                res.status(400).json({error: 'No such aid and version.'});
+                return;
+            }
+            else {
+                datas.map(function (data) {
+                    data.isItem = (data.isItem == 1);
+                    delete data.sid;
+                    delete data.aid;
+                    delete data.version;
+                });
+                _ans.CorrespondAnswer = datas;
 
-            var p = spawn('./Modify', [], { capture: ["stdout", "stderr"] });
-            p.childProcess.stdin.writeEncoded(JSON.stringify(_ans));
-            p.childProcess.stdin.end();
-            return p;
+                var p = spawn('./Modify', [], {capture: ["stdout", "stderr"]});
+                p.childProcess.stdin.writeEncoded(JSON.stringify(_ans));
+                p.childProcess.stdin.end();
+                return p;
+            }
         }
     }).then(function(result) {
-        if(result.stdout) {
-            edit.steps = JSON.parse(result.stdout);
-            return res.json(edit);
+        if(result) {
+            if (result.stdout) {
+                edit.steps = JSON.parse(result.stdout);
+                return res.json(edit);
+            }
         }
     }).catch(function(err) {
         next(err);
