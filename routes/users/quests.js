@@ -71,7 +71,7 @@ router.get('/', function(req, res, next) {
 router.get('/:aid', function(req, res, next) {
     conn.query(squel.select()
                     .field('q.status', 'status').field('q.progress', 'progress').field('s.isItem', 'isItem')
-                    .field('s.count', 'count').field('s.sid', 'step_id')
+                    .field('s.count', 'count').field('s.sid', 'step_id').field('s.title', 'title')
                     .from('quests', 'q')
                     .from('steps', 's')
                     .where(squel.expr().and('q.aid = ?', req.params.aid)
